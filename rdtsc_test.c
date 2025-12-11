@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <stddef.h>
-#include <string.h>
 
 /* 外部Schedule函数声明 */
 extern uint64_t Schedule(uint64_t arg1, uint64_t arg2);
