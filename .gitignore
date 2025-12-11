@@ -1,0 +1,9 @@
+*.o
+*.a
+*.so
+test_rdtsc
+example
+*.dylib
+*.dll
+*.exe
+*.out
