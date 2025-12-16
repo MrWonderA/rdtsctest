@@ -40,9 +40,10 @@ extern int AsmSchedule(int QueueID);
 - **优化**: 明确返回值，与汇编版本行为一致
 
 #### `AsmSchedule(int QueueID)`
-- **功能**: 队列调度函数
-- **参数**: 接受队列ID，返回调度结果状态码
-- **优化**: 完全重新设计，去除函数指针参数，简化接口
+- **功能**: 队列调度函数（包装外部 `Schedule(int esp, int QueueID)`）
+- **参数**: `QueueID` 为落选线程将要进入的队列号
+- **返回**: 新选中线程的现场指针（新 esp）
+- **说明**: 在 x86-32 下使用内联汇编保存/恢复寄存器并切换到新 esp；其他架构下提供降级实现（读取当前 sp 并调用 `Schedule`）
 
 ## 编译信息
 
@@ -85,9 +86,9 @@ nm rdtsc_test.o | grep -E "(RDTSC|LMULDWORD|EXECMASM|AsmSchedule)"
 
 ## 与原汇编版本差异
 
-1. **`AsmSchedule` 接口变化**: 
-   - 原版: 接受函数指针，返回 uint64_t
-   - 新版: 接受 int QueueID，返回 int
+1. **`AsmSchedule` 行为说明**: 
+   - 依赖外部提供 `int Schedule(int esp, int QueueID);`
+   - `Schedule` 返回新选中线程的现场指针(新 esp)，`AsmSchedule` 在 x86-32 下会切换到该新 esp
    
 2. **返回值优化**:
    - 所有函数返回类型与用户声明一致

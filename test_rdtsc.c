@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 /* 外部Schedule函数声明 */
-extern long long Schedule(long long arg1, long long arg2);
+extern int Schedule(int esp, int QueueID);
 
 /* 包含我们的优化后的函数 */
 long long _RDTSC(void);
@@ -11,9 +11,9 @@ int _EXECMASM(void);
 int AsmSchedule(int QueueID);
 
 /* 简单的Schedule函数实现用于测试 */
-long long Schedule(long long arg1, long long arg2) {
-    printf("Schedule called with args: %lld, %lld\n", arg1, arg2);
-    return (long long)arg1 + arg2;  /* 简单返回两个参数的和 */
+int Schedule(int esp, int QueueID) {
+    printf("Schedule called with args: esp=%d, QueueID=%d\n", esp, QueueID);
+    return esp + QueueID;
 }
 
 int main(void) {
