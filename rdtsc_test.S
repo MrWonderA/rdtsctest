@@ -1,69 +1,71 @@
-	.text
-	.align 4
+#if defined(__i386__)
+    .text
+    .align 4
 
-	.globl _RDTSC
+    .globl _RDTSC
 _RDTSC:
-	.byte	0x0f
-	.byte	0x31
-	ret
+    .byte    0x0f
+    .byte    0x31
+    ret
 
-
-	.globl _LMULDWORD
+    .globl _LMULDWORD
 _LMULDWORD:
-	pushl	%ecx
-	movl	12(%esp),%eax
-	mull	16(%esp)
-	movl	%eax,%ecx
+    pushl    %ecx
+    movl    12(%esp),%eax
+    mull    16(%esp)
+    movl    %eax,%ecx
 
-	movl	8(%esp),%eax
-	mull	16(%esp)
-	addl	%ecx,%edx
+    movl    8(%esp),%eax
+    mull    16(%esp)
+    addl    %ecx,%edx
 
-	popl	%ecx
-	ret
+    popl    %ecx
+    ret
 
-	
-	.globl _EXECMASM
+    .globl _EXECMASM
 _EXECMASM:
-	pushl	%eax
-	pushl	%ecx
+    pushl    %eax
+    pushl    %ecx
 
-	movl	$10000,%ecx
-l1:	
-	addl	%ecx,%eax
-	subl	%ecx,%eax
-	jmp	l2
-l2:	
-	loop	l1
+    movl    $10000,%ecx
+l1:
+    addl    %ecx,%eax
+    subl    %ecx,%eax
+    jmp    l2
+l2:
+    loop    l1
 
-	popl	%ecx
-	popl	%eax
-	ret
+    popl    %ecx
+    popl    %eax
+    ret
 
-
-	.globl AsmSchedule
+    .globl AsmSchedule
 AsmSchedule:
-	pushl	%eax
-	pushl	%ebx
-	pushl	%ecx
-	pushl	%edx
-	pushl	%esi
-	pushl	%edi
-	pushl	%ebp
+    pushl    %eax
+    pushl    %ebx
+    pushl    %ecx
+    pushl    %edx
+    pushl    %esi
+    pushl    %edi
+    pushl    %ebp
 
-	movl	0x20(%esp),%eax
-	movl	%esp,%ecx
-	pushl	%eax
-	pushl	%ecx
-	.globl	Schedule
-	call	Schedule
-	movl	%eax,%esp
+    movl    0x20(%esp),%eax
+    movl    %esp,%ecx
+    pushl    %eax
+    pushl    %ecx
+    .globl    Schedule
+    call    Schedule
+    movl    %eax,%esp
 
-	popl	%ebp
-	popl	%edi
-	popl	%esi
-	popl	%edx
-	popl	%ecx
-	popl	%ebx
-	popl	%eax
-	ret
+    popl    %ebp
+    popl    %edi
+    popl    %esi
+    popl    %edx
+    popl    %ecx
+    popl    %ebx
+    popl    %eax
+    ret
+
+#else
+/* non-x86: keep file empty so it can be compiled as a .S source on any target */
+#endif
