@@ -8,18 +8,20 @@
  * 
  * 提供跨平台的CPU周期计数、乘法运算和性能校准接口
  * 支持x86和ARM架构
+ * 
+ * 函数声明与汇编版本兼容，返回类型使用long long(int64_t)
  */
 
 /* CPU周期计数器读取 - 返回CPU执行的总周期数 */
-uint64_t _RDTSC(void);
+long long _RDTSC(void);
 
 /* 32位 × 32位 → 64位乘法 */
-uint64_t _LMULDWORD(uint32_t a, uint32_t b);
+long long _LMULDWORD(long long a, int b);
 
-/* 确定性加减循环用于性能校准 */
-void _EXECMASM(void);
+/* 确定性加减循环用于性能校准 - 返回执行循环次数 */
+int _EXECMASM(void);
 
-/* 寄存器保存与函数调用包装器 */
-uint64_t AsmSchedule(void (*func_ptr)(void));
+/* 队列调度函数 - 根据QueueID执行调度操作 */
+int AsmSchedule(int QueueID);
 
 #endif /* RDTSC_TEST_H */
