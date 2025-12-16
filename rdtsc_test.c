@@ -2,8 +2,9 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-/* 外部Schedule函数声明 */
-extern long long Schedule(long long arg1, long long arg2);
+/* 外部Schedule函数声明
+ * Schedule(esp, QueueID) -> 返回新选中线程的现场指针(新esp) */
+extern int Schedule(int esp, int QueueID);
 
 /*
  * _RDTSC - CPU周期计数器读取
@@ -82,45 +83,57 @@ int _EXECMASM(void)
 
 /*
  * AsmSchedule - 队列调度函数
- * 
- * 根据QueueID执行相应的调度操作
- * 内部调用Schedule函数进行实际的处理
- * 
- * 参数:
- *   QueueID - 队列标识符，用于选择调度策略
- * 
- * 返回: int - 调度操作的结果状态码
+ *
+ * 入口:
+ *   esp: 落选线程的现场指针
+ *   QueueID: 落选线程将要进入的队列号
+ * 返回:
+ *   新选中线程的现场指针(新esp)
  */
+#if defined(__i386__) && (defined(__GNUC__) || defined(__clang__))
+__attribute__((naked)) int AsmSchedule(int QueueID)
+{
+    __asm__ volatile(
+        "pushl %%eax\n\t"
+        "pushl %%ebx\n\t"
+        "pushl %%ecx\n\t"
+        "pushl %%edx\n\t"
+        "pushl %%esi\n\t"
+        "pushl %%edi\n\t"
+        "pushl %%ebp\n\t"
+        "movl 0x20(%%esp), %%eax\n\t"
+        "movl %%esp, %%ecx\n\t"
+        "pushl %%eax\n\t"
+        "pushl %%ecx\n\t"
+        "call Schedule\n\t"
+        "movl %%eax, %%esp\n\t"
+        "popl %%ebp\n\t"
+        "popl %%edi\n\t"
+        "popl %%esi\n\t"
+        "popl %%edx\n\t"
+        "popl %%ecx\n\t"
+        "popl %%ebx\n\t"
+        "popl %%eax\n\t"
+        "ret\n\t"
+    );
+}
+#else
 int AsmSchedule(int QueueID)
 {
-    /* 获取当前栈指针值（保持原有的调试信息功能） */
-    volatile long long esp;
-    
-#ifdef __aarch64__
-    /* ARM64: 读取SP (64位栈指针) */
-    __asm__ volatile("mov %0, sp" : "=r"(esp));
+    uintptr_t sp;
+
+#if defined(__aarch64__)
+    __asm__ volatile("mov %0, sp" : "=r"(sp));
 #elif defined(__arm__)
-    /* ARM32: 读取SP (32位栈指针) */
-    uint32_t esp32;
-    __asm__ volatile("mov %0, sp" : "=r"(esp32));
-    esp = (long long)esp32;
+    __asm__ volatile("mov %0, sp" : "=r"(sp));
 #elif defined(__x86_64__)
-    /* x86-64: 读取RSP */
-    __asm__ volatile("mov %%rsp, %0" : "=r"(esp));
+    __asm__ volatile("mov %%rsp, %0" : "=r"(sp));
 #elif defined(__i386__)
-    /* x86-32: 读取ESP */
-    uint32_t esp32;
-    __asm__ volatile("mov %%esp, %0" : "=r"(esp32));
-    esp = (long long)esp32;
+    __asm__ volatile("mov %%esp, %0" : "=r"(sp));
 #else
-    /* 未知架构: 使用当前栈地址 */
-    esp = (long long)&QueueID;  /* 使用参数地址作为栈指针近似值 */
+    sp = (uintptr_t)&QueueID;
 #endif
-    
-    /* 调用外部Schedule函数，传递队列ID和栈指针作为参数
-     * 返回值转换为int类型 */
-    long long result = Schedule((long long)QueueID, esp);
-    
-    /* 将结果转换为int返回，确保与声明一致 */
-    return (int)result;
+
+    return Schedule((int)sp, QueueID);
 }
+#endif
